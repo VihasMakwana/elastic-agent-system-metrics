@@ -9,7 +9,7 @@ require (
 	github.com/elastic/go-structform v0.0.9
 	github.com/elastic/go-sysinfo v1.14.1
 	github.com/elastic/go-windows v1.0.1
-	github.com/elastic/gosigar v0.14.2
+	github.com/elastic/gosigar v0.14.3
 	github.com/gofrs/uuid/v5 v5.2.0
 	github.com/magefile/mage v1.15.0
 	github.com/shirou/gopsutil/v4 v4.24.7
@@ -75,3 +75,5 @@ require (
 	gotest.tools/v3 v3.5.1 // indirect
 	howett.net/plist v1.0.1 // indirect
 )
+
+replace github.com/elastic/elastic-agent-libs => ../elastic-agent-libs
