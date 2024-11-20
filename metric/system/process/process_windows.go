@@ -24,7 +24,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"syscall"
-	"time"
 	"unsafe"
 
 	xsyswindows "golang.org/x/sys/windows"
@@ -409,20 +408,18 @@ func getProcCredName(pid int) (string, error) {
 
 func getIdleProcessTime() (float64, float64, error) {
 	idle, kernel, user, err := gowindows.GetSystemTimes()
+	if err != nil {
+		return 0, 0, toNonFatal(err)
+	}
 
 	// Average by cpu because GetSystemTimes returns summation of across all cpus
 	numCpus := float64(runtime.NumCPU())
 	idleTime := float64(idle) / numCpus
 	kernelTime := float64(kernel) / numCpus
 	userTime := float64(user) / numCpus
-
-	if err != nil {
-		return 0, 0, toNonFatal(err)
-	}
 	// Calculate total CPU time, averaged by cpu
 	totalTime := idleTime + kernelTime + userTime
 	return totalTime, idleTime, nil
-
 }
 
 func getIdleProcessMemory(state ProcState) (ProcState, error) {
@@ -458,21 +455,11 @@ func fillIdleProcess(state ProcState) (ProcState, error) {
 	if err != nil {
 		return state, err
 	}
-	total0, idle0, err := getIdleProcessTime()
+	_, idle, err := getIdleProcessTime()
 	if err != nil {
 		return state, err
 	}
-	// sleep is crucial to calculate the idle percentage
-	time.Sleep(50 * time.Millisecond)
-	total1, idle1, err := getIdleProcessTime()
-	if err != nil {
-		return state, err
-	}
-	// Check if denominator is non-zero, to avoid "invalid operation: division by zero"
-	if total1-total0 != 0 {
-		state.CPU.Total.Pct = opt.FloatWith((idle1 - idle0) / (total1 - total0))
-	}
-	state.CPU.Total.Ticks = opt.UintWith(uint64(idle1 / 1e6))
-	state.CPU.Total.Value = opt.FloatWith(idle1)
+	state.CPU.Total.Ticks = opt.UintWith(uint64(idle / 1e6))
+	state.CPU.Total.Value = opt.FloatWith(idle)
 	return state, nil
 }
